@@ -1,0 +1,42 @@
+service: ec2-timeout
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+  stage: dev
+  region: us-west-2
+
+resources:
+  Resources:
+    ec2TimeoutDevLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ec2TimeoutDevLambdaRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: 'Allow'
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ec2TimeoutDevLambdaPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - 'cloudwatch:GetMetricStatistics'
+                    - 'ec2:DescribeInstances'
+                    - 'ec2:StopInstances'
+                  Resource: '*'
+
+functions:
+  ec2-timeout:
+    handler: handler.ec2_timeout_handler
+    role:  ec2TimeoutDevLambdaRole
+    events:
+      - schedule: rate(15 minutes)
